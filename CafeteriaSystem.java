@@ -35,7 +35,7 @@ public class CafeteriaSystem extends JFrame {
         }
     }
 
-    // --- APPLICATION STATE (Original Variables) ---
+    // --- APPLICATION STATE ---
     private final List<OrderItem> cart = new ArrayList<>();
     private DefaultTableModel tableModel;
     private JLabel lblSubtotal;
@@ -43,7 +43,7 @@ public class CafeteriaSystem extends JFrame {
     private JLabel lblTotal;
     private JTextField txtPayment;
 
-    // --- NEW MULTI-SCREEN VARIABLES ---
+    // --- MULTI-SCREEN VARIABLES ---
     private CardLayout cardLayout;
     private JPanel mainContainer;
     private String orderType = "";
@@ -54,18 +54,14 @@ public class CafeteriaSystem extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // Setup CardLayout to swap screens
         cardLayout = new CardLayout();
         mainContainer = new JPanel(cardLayout);
 
-        // Add the three phases of the kiosk
         mainContainer.add(createWelcomeScreen(), "WELCOME");
         mainContainer.add(createOrderTypeScreen(), "ORDER_TYPE");
         mainContainer.add(createMenuScreen(), "MENU"); 
 
         add(mainContainer);
-        
-        // Boot directly to the welcome screen
         cardLayout.show(mainContainer, "WELCOME");
     }
 
@@ -129,7 +125,7 @@ public class CafeteriaSystem extends JFrame {
     }
 
     // =========================================================================
-    // YOUR ORIGINAL UI ENCAPSULATED IN A PANEL
+    // MENU & CHECKOUT SCREEN
     // =========================================================================
 
     private JPanel createMenuScreen() {
@@ -158,26 +154,42 @@ public class CafeteriaSystem extends JFrame {
         // LEFT PANEL: MENU SELECTION
         JPanel menuPanel = new JPanel();
         menuPanel.setLayout(new BoxLayout(menuPanel, BoxLayout.Y_AXIS));
-        menuPanel.setBorder(BorderFactory.createTitledBorder(" Menu Items "));
+        menuPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        JLabel lblFood = new JLabel("Food Items:");
-        lblFood.setFont(new Font("Arial", Font.BOLD, 14));
-        menuPanel.add(lblFood);
-        menuPanel.add(createMenuItemButton("Food", 1, "1. Burger (₱50)"));
-        menuPanel.add(createMenuItemButton("Food", 2, "2. Fried Chicken (₱80)"));
-        menuPanel.add(createMenuItemButton("Food", 3, "3. Spaghetti (₱70)"));
-        menuPanel.add(createMenuItemButton("Food", 4, "4. Fries (₱50)"));
-
+        // --- RICE MEALS (Generic Categories that pop up choices) ---
+        addCategoryHeader(menuPanel, "Rice Meals (Turo-Turo Style):");
+        menuPanel.add(createComboButton(1, "1. Meat + Rice (₱70)"));
+        menuPanel.add(createComboButton(2, "2. Meat + Meat + Rice (₱120)"));
+        menuPanel.add(createComboButton(3, "3. Vegetable + Rice (₱55)"));
+        menuPanel.add(createComboButton(4, "4. Meat + Vegetable + Rice (₱90)"));
         menuPanel.add(Box.createVerticalStrut(15));
 
-        JLabel lblDrinks = new JLabel("Drinks:");
-        lblDrinks.setFont(new Font("Arial", Font.BOLD, 14));
-        menuPanel.add(lblDrinks);
-        menuPanel.add(createMenuItemButton("Drinks", 1, "1. Water (₱15)"));
-        menuPanel.add(createMenuItemButton("Drinks", 2, "2. Coke (₱25)"));
-        menuPanel.add(createMenuItemButton("Drinks", 3, "3. Sprite (₱25)"));
+        // --- STANDARD RUBRIC ITEMS ---
+        addCategoryHeader(menuPanel, "Fast Food:");
+        menuPanel.add(createMenuItemButton("Fast Food", 1, "1. Burger (₱50)"));
+        menuPanel.add(createMenuItemButton("Fast Food", 2, "2. Fried Chicken (₱80)"));
+        menuPanel.add(createMenuItemButton("Fast Food", 3, "3. Spaghetti (₱70)"));
+        menuPanel.add(createMenuItemButton("Fast Food", 4, "4. Fries (₱50)"));
+        menuPanel.add(Box.createVerticalStrut(15));
 
-        panel.add(menuPanel, BorderLayout.WEST);
+        addCategoryHeader(menuPanel, "Snacks & Biscuits:");
+        menuPanel.add(createMenuItemButton("Snacks", 1, "1. Skyflakes (₱10)"));
+        menuPanel.add(createMenuItemButton("Snacks", 2, "2. Hansel Mocha (₱10)"));
+        menuPanel.add(createMenuItemButton("Snacks", 3, "3. Piattos Cheese (₱18)"));
+        menuPanel.add(createMenuItemButton("Snacks", 4, "4. Pancit Canton (₱25)"));
+        menuPanel.add(Box.createVerticalStrut(15));
+
+        addCategoryHeader(menuPanel, "Drinks:");
+        menuPanel.add(createMenuItemButton("Drinks", 1, "1. Mineral Water (₱15)"));
+        menuPanel.add(createMenuItemButton("Drinks", 2, "2. Coca-Cola (₱25)"));
+        menuPanel.add(createMenuItemButton("Drinks", 3, "3. Sprite (₱25)"));
+        menuPanel.add(createMenuItemButton("Drinks", 4, "4. C2 Apple (₱20)"));
+
+        JScrollPane menuScroll = new JScrollPane(menuPanel);
+        menuScroll.setBorder(BorderFactory.createTitledBorder(" Menu Items "));
+        menuScroll.setPreferredSize(new Dimension(320, 0)); 
+        menuScroll.getVerticalScrollBar().setUnitIncrement(16); 
+        panel.add(menuScroll, BorderLayout.WEST);
 
         // CENTER PANEL: ORDER CART TABLE
         String[] columns = {"Item Name", "Category", "Unit Price", "Qty", "Subtotal"};
@@ -189,7 +201,7 @@ public class CafeteriaSystem extends JFrame {
 
         // RIGHT PANEL: BILLING & PAYMENT
         JPanel billingPanel = new JPanel();
-        billingPanel.setLayout(new GridLayout(9, 1, 5, 5)); // Adjusted for removed checkbox
+        billingPanel.setLayout(new GridLayout(9, 1, 5, 5));
         billingPanel.setBorder(BorderFactory.createTitledBorder(" Billing & Checkout "));
 
         lblSubtotal = new JLabel("Subtotal: ₱0.00");
@@ -223,13 +235,93 @@ public class CafeteriaSystem extends JFrame {
         return panel;
     }
 
+    private void addCategoryHeader(JPanel panel, String title) {
+        JLabel label = new JLabel(title);
+        label.setFont(new Font("Arial", Font.BOLD, 14));
+        panel.add(label);
+    }
+
     // =========================================================================
-    // YOUR ORIGINAL LOGIC METHODS
+    // SYSTEM LOGIC 
     // =========================================================================
 
+    // NEW LOGIC: Dropdown dialog for picking specific meats and veggies
+    private JButton createComboButton(int choiceCode, String labelText) {
+        JButton btn = new JButton(labelText);
+        btn.setMaximumSize(new Dimension(300, 35));
+        btn.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        btn.addActionListener(e -> {
+            String[] meats = {"Pork Adobo", "Beef Tapa", "Chicken Inasal", "Lechon Kawali", "Sisig"};
+            String[] veggies = {"Pinakbet", "Ginisang Monggo", "Chopsuey", "Laing"};
+            
+            String finalName = "";
+            double price = 0.0;
+
+            // Using the Rubric Required Switch Statement for Combo types
+            switch (choiceCode) {
+                case 1: // 1 Meat
+                    String m1 = (String) JOptionPane.showInputDialog(this, "Select your Meat:", "Choose Ulam", 
+                                JOptionPane.QUESTION_MESSAGE, null, meats, meats[0]);
+                    if (m1 == null) return; // User cancelled
+                    finalName = m1 + " + Rice";
+                    price = 70.0;
+                    break;
+                case 2: // 2 Meats
+                    String mm1 = (String) JOptionPane.showInputDialog(this, "Select FIRST Meat:", "Choose Ulam 1", 
+                                JOptionPane.QUESTION_MESSAGE, null, meats, meats[0]);
+                    if (mm1 == null) return;
+                    String mm2 = (String) JOptionPane.showInputDialog(this, "Select SECOND Meat:", "Choose Ulam 2", 
+                                JOptionPane.QUESTION_MESSAGE, null, meats, meats[0]);
+                    if (mm2 == null) return;
+                    finalName = mm1 + " + " + mm2 + " + Rice";
+                    price = 120.0;
+                    break;
+                case 3: // 1 Veggie
+                    String v1 = (String) JOptionPane.showInputDialog(this, "Select your Vegetable:", "Choose Ulam", 
+                                JOptionPane.QUESTION_MESSAGE, null, veggies, veggies[0]);
+                    if (v1 == null) return;
+                    finalName = v1 + " + Rice";
+                    price = 55.0;
+                    break;
+                case 4: // 1 Meat + 1 Veggie
+                    String mv1 = (String) JOptionPane.showInputDialog(this, "Select your Meat:", "Choose Meat", 
+                                JOptionPane.QUESTION_MESSAGE, null, meats, meats[0]);
+                    if (mv1 == null) return;
+                    String vv1 = (String) JOptionPane.showInputDialog(this, "Select your Vegetable:", "Choose Veggie", 
+                                JOptionPane.QUESTION_MESSAGE, null, veggies, veggies[0]);
+                    if (vv1 == null) return;
+                    finalName = mv1 + " + " + vv1 + " + Rice";
+                    price = 90.0;
+                    break;
+            }
+
+            MenuItem selectedItem = new MenuItem(100 + choiceCode, finalName, "Rice Combo", price);
+            
+            // Ask for quantity after picking the meal
+            String input = JOptionPane.showInputDialog(this, "Enter Quantity for " + finalName + ":", "Quantity", JOptionPane.QUESTION_MESSAGE);
+            if (input != null && !input.trim().isEmpty()) {
+                try {
+                    int qty = Integer.parseInt(input);
+                    if (qty > 0) {
+                        cart.add(new OrderItem(selectedItem, qty));
+                        refreshTable();
+                        updateTotals();
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Quantity must be greater than 0.");
+                    }
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, "Please enter a valid number.");
+                }
+            }
+        });
+        return btn;
+    }
+
+    // ORIGINAL LOGIC: For standard items
     private JButton createMenuItemButton(String category, int choiceCode, String labelText) {
         JButton btn = new JButton(labelText);
-        btn.setMaximumSize(new Dimension(220, 30));
+        btn.setMaximumSize(new Dimension(300, 35)); 
         btn.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         btn.addActionListener(e -> {
@@ -256,20 +348,30 @@ public class CafeteriaSystem extends JFrame {
         return btn;
     }
 
+    // RUBRIC REQUIREMENT: Switch Statement for standard items
     public MenuItem getMenuItemByCode(String category, int choice) {
-        if (category.equalsIgnoreCase("Food")) {
+        if (category.equalsIgnoreCase("Fast Food")) {
             switch (choice) {
-                case 1: return new MenuItem(1, "Burger", "Food", 50.0);
-                case 2: return new MenuItem(2, "Fried Chicken", "Food", 80.0);
-                case 3: return new MenuItem(3, "Spaghetti", "Food", 70.0);
-                case 4: return new MenuItem(4, "Fries", "Food", 50.0);
+                case 1: return new MenuItem(201, "Burger", "Fast Food", 50.0);
+                case 2: return new MenuItem(202, "Fried Chicken", "Fast Food", 80.0);
+                case 3: return new MenuItem(203, "Spaghetti", "Fast Food", 70.0);
+                case 4: return new MenuItem(204, "Fries", "Fast Food", 50.0);
+                default: return null;
+            }
+        } else if (category.equalsIgnoreCase("Snacks")) {
+            switch (choice) {
+                case 1: return new MenuItem(301, "Skyflakes", "Snacks", 10.0);
+                case 2: return new MenuItem(302, "Hansel Mocha", "Snacks", 10.0);
+                case 3: return new MenuItem(303, "Piattos Cheese", "Snacks", 18.0);
+                case 4: return new MenuItem(304, "Pancit Canton", "Snacks", 25.0);
                 default: return null;
             }
         } else if (category.equalsIgnoreCase("Drinks")) {
             switch (choice) {
-                case 1: return new MenuItem(5, "Water", "Drinks", 15.0);
-                case 2: return new MenuItem(6, "Coke", "Drinks", 25.0);
-                case 3: return new MenuItem(7, "Sprite", "Drinks", 25.0);
+                case 1: return new MenuItem(401, "Mineral Water", "Drinks", 15.0);
+                case 2: return new MenuItem(402, "Coca-Cola", "Drinks", 25.0);
+                case 3: return new MenuItem(403, "Sprite", "Drinks", 25.0);
+                case 4: return new MenuItem(404, "C2 Apple", "Drinks", 20.0);
                 default: return null;
             }
         }
@@ -301,7 +403,6 @@ public class CafeteriaSystem extends JFrame {
         double subtotal = calculateSubtotal();
         double discount = 0.0;
 
-        // Simplified Conditional Statement: Only applies bulk discount
         if (subtotal >= 500.0) {
             discount = subtotal * 0.10;
         }
@@ -349,7 +450,6 @@ public class CafeteriaSystem extends JFrame {
 
                 JOptionPane.showMessageDialog(this, receipt.toString(), "Order Summary & Receipt", JOptionPane.INFORMATION_MESSAGE);
                 
-                // End transaction and return to welcome screen
                 resetOrder();
                 orderType = "";
                 cardLayout.show(mainContainer, "WELCOME");
