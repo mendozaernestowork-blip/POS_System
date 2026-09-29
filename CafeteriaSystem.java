@@ -6,7 +6,7 @@ import java.util.List;
 
 public class CafeteriaSystem extends JFrame {
 
-    // --- DATA MODELS ---
+    // --- ORIGINAL DATA MODELS ---
     static class MenuItem {
         int id;
         String name;
@@ -35,37 +35,131 @@ public class CafeteriaSystem extends JFrame {
         }
     }
 
-    // Application state
+    // --- APPLICATION STATE (Original Variables) ---
     private final List<OrderItem> cart = new ArrayList<>();
-    private final DefaultTableModel tableModel;
-    private final JLabel lblSubtotal;
-    private final JLabel lblDiscount;
-    private final JLabel lblTotal;
-    private final JCheckBox chkPwd;
-    private final JTextField txtPayment;
+    private DefaultTableModel tableModel;
+    private JLabel lblSubtotal;
+    private JLabel lblDiscount;
+    private JLabel lblTotal;
+    private JTextField txtPayment;
+
+    // --- NEW MULTI-SCREEN VARIABLES ---
+    private CardLayout cardLayout;
+    private JPanel mainContainer;
+    private String orderType = "";
 
     public CafeteriaSystem() {
         setTitle("Campus Cafeteria Ordering and Billing System");
-        setSize(900, 600);
+        setSize(1024, 768); 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
-        setLayout(new BorderLayout(10, 10));
+
+        // Setup CardLayout to swap screens
+        cardLayout = new CardLayout();
+        mainContainer = new JPanel(cardLayout);
+
+        // Add the three phases of the kiosk
+        mainContainer.add(createWelcomeScreen(), "WELCOME");
+        mainContainer.add(createOrderTypeScreen(), "ORDER_TYPE");
+        mainContainer.add(createMenuScreen(), "MENU"); 
+
+        add(mainContainer);
+        
+        // Boot directly to the welcome screen
+        cardLayout.show(mainContainer, "WELCOME");
+    }
+
+    // =========================================================================
+    // KIOSK FLOW PANELS
+    // =========================================================================
+
+    private JPanel createWelcomeScreen() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(new Color(41, 128, 185));
+
+        JLabel title = new JLabel("CAMPUS CAFETERIA POS SYSTEM", SwingConstants.CENTER);
+        title.setFont(new Font("Arial", Font.BOLD, 48));
+        title.setForeground(Color.WHITE);
+
+        JButton btnStart = new JButton("TAP TO START");
+        btnStart.setFont(new Font("Arial", Font.BOLD, 32));
+        btnStart.setBackground(Color.WHITE);
+        btnStart.setForeground(new Color(41, 128, 185));
+        btnStart.setFocusPainted(false);
+        btnStart.addActionListener(e -> cardLayout.show(mainContainer, "ORDER_TYPE"));
+
+        panel.add(title, BorderLayout.CENTER);
+        
+        JPanel bottomPanel = new JPanel();
+        bottomPanel.setOpaque(false);
+        bottomPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 100, 0));
+        bottomPanel.add(btnStart);
+        panel.add(bottomPanel, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    private JPanel createOrderTypeScreen() {
+        JPanel panel = new JPanel(new GridLayout(1, 2, 20, 20));
+        panel.setBorder(BorderFactory.createEmptyBorder(150, 100, 150, 100));
+        panel.setBackground(Color.WHITE);
+
+        JButton btnDineIn = new JButton("DINE-IN");
+        btnDineIn.setFont(new Font("Arial", Font.BOLD, 40));
+        btnDineIn.setBackground(new Color(39, 174, 96));
+        btnDineIn.setForeground(Color.WHITE);
+        btnDineIn.addActionListener(e -> {
+            orderType = "Dine-In";
+            cardLayout.show(mainContainer, "MENU");
+        });
+
+        JButton btnTakeOut = new JButton("TAKE-OUT");
+        btnTakeOut.setFont(new Font("Arial", Font.BOLD, 40));
+        btnTakeOut.setBackground(new Color(39, 174, 96));
+        btnTakeOut.setForeground(Color.WHITE);
+        btnTakeOut.addActionListener(e -> {
+            orderType = "Take-Out";
+            cardLayout.show(mainContainer, "MENU");
+        });
+
+        panel.add(btnDineIn);
+        panel.add(btnTakeOut);
+
+        return panel;
+    }
+
+    // =========================================================================
+    // YOUR ORIGINAL UI ENCAPSULATED IN A PANEL
+    // =========================================================================
+
+    private JPanel createMenuScreen() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
 
         // TOP HEADER
-        JPanel headerPanel = new JPanel();
+        JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(new Color(41, 128, 185));
-        JLabel headerLabel = new JLabel("CAMPUS CAFETERIA POS SYSTEM");
+        JLabel headerLabel = new JLabel(" SELECT YOUR ORDER", SwingConstants.LEFT);
         headerLabel.setFont(new Font("Arial", Font.BOLD, 22));
         headerLabel.setForeground(Color.WHITE);
-        headerPanel.add(headerLabel);
-        add(headerPanel, BorderLayout.NORTH);
+        
+        JButton btnCancel = new JButton("Cancel Order");
+        btnCancel.setBackground(new Color(231, 76, 60));
+        btnCancel.setForeground(Color.WHITE);
+        btnCancel.addActionListener(e -> {
+            resetOrder();
+            orderType = "";
+            cardLayout.show(mainContainer, "WELCOME");
+        });
+
+        headerPanel.add(headerLabel, BorderLayout.CENTER);
+        headerPanel.add(btnCancel, BorderLayout.EAST);
+        panel.add(headerPanel, BorderLayout.NORTH);
 
         // LEFT PANEL: MENU SELECTION
         JPanel menuPanel = new JPanel();
         menuPanel.setLayout(new BoxLayout(menuPanel, BoxLayout.Y_AXIS));
         menuPanel.setBorder(BorderFactory.createTitledBorder(" Menu Items "));
 
-        // Food Section
         JLabel lblFood = new JLabel("Food Items:");
         lblFood.setFont(new Font("Arial", Font.BOLD, 14));
         menuPanel.add(lblFood);
@@ -76,7 +170,6 @@ public class CafeteriaSystem extends JFrame {
 
         menuPanel.add(Box.createVerticalStrut(15));
 
-        // Drinks Section
         JLabel lblDrinks = new JLabel("Drinks:");
         lblDrinks.setFont(new Font("Arial", Font.BOLD, 14));
         menuPanel.add(lblDrinks);
@@ -84,7 +177,7 @@ public class CafeteriaSystem extends JFrame {
         menuPanel.add(createMenuItemButton("Drinks", 2, "2. Coke (₱25)"));
         menuPanel.add(createMenuItemButton("Drinks", 3, "3. Sprite (₱25)"));
 
-        add(menuPanel, BorderLayout.WEST);
+        panel.add(menuPanel, BorderLayout.WEST);
 
         // CENTER PANEL: ORDER CART TABLE
         String[] columns = {"Item Name", "Category", "Unit Price", "Qty", "Subtotal"};
@@ -92,20 +185,17 @@ public class CafeteriaSystem extends JFrame {
         JTable orderTable = new JTable(tableModel);
         JScrollPane scrollPane = new JScrollPane(orderTable);
         scrollPane.setBorder(BorderFactory.createTitledBorder(" Current Order Summary "));
-        add(scrollPane, BorderLayout.CENTER);
+        panel.add(scrollPane, BorderLayout.CENTER);
 
         // RIGHT PANEL: BILLING & PAYMENT
         JPanel billingPanel = new JPanel();
-        billingPanel.setLayout(new GridLayout(10, 1, 5, 5));
+        billingPanel.setLayout(new GridLayout(9, 1, 5, 5)); // Adjusted for removed checkbox
         billingPanel.setBorder(BorderFactory.createTitledBorder(" Billing & Checkout "));
 
         lblSubtotal = new JLabel("Subtotal: ₱0.00");
         lblDiscount = new JLabel("Discount: ₱0.00");
         lblTotal = new JLabel("Total Bill: ₱0.00");
         lblTotal.setFont(new Font("Arial", Font.BOLD, 16));
-
-        chkPwd = new JCheckBox("Apply 20% PWD Discount");
-        chkPwd.addActionListener(e -> updateTotals());
 
         JLabel lblPaymentPrompt = new JLabel("Enter Cash Payment (₱):");
         txtPayment = new JTextField();
@@ -120,7 +210,6 @@ public class CafeteriaSystem extends JFrame {
         btnReset.addActionListener(e -> resetOrder());
 
         billingPanel.add(lblSubtotal);
-        billingPanel.add(chkPwd);
         billingPanel.add(lblDiscount);
         billingPanel.add(lblTotal);
         billingPanel.add(new JSeparator());
@@ -129,17 +218,21 @@ public class CafeteriaSystem extends JFrame {
         billingPanel.add(btnCheckout);
         billingPanel.add(btnReset);
 
-        add(billingPanel, BorderLayout.EAST);
+        panel.add(billingPanel, BorderLayout.EAST);
+
+        return panel;
     }
 
-    // Creates menu buttons wired to the requirement logic
+    // =========================================================================
+    // YOUR ORIGINAL LOGIC METHODS
+    // =========================================================================
+
     private JButton createMenuItemButton(String category, int choiceCode, String labelText) {
         JButton btn = new JButton(labelText);
         btn.setMaximumSize(new Dimension(220, 30));
         btn.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         btn.addActionListener(e -> {
-            // Fetch item using SWITCH STATEMENT
             MenuItem selectedItem = getMenuItemByCode(category, choiceCode);
             if (selectedItem != null) {
                 String input = JOptionPane.showInputDialog(this, 
@@ -163,11 +256,6 @@ public class CafeteriaSystem extends JFrame {
         return btn;
     }
 
-    // =========================================================================
-    // REQUIRED ACADEMIC LOGIC: SWITCH, CONDITIONAL, AND LOOP STATEMENTS
-    // =========================================================================
-
-    // 1. SWITCH STATEMENT: Menu item selection logic
     public MenuItem getMenuItemByCode(String category, int choice) {
         if (category.equalsIgnoreCase("Food")) {
             switch (choice) {
@@ -188,10 +276,9 @@ public class CafeteriaSystem extends JFrame {
         return null;
     }
 
-    // 2. LOOP STATEMENT: Iterate over cart items to refresh table and totals
     private void refreshTable() {
         tableModel.setRowCount(0);
-        for (OrderItem order : cart) { // Loop statement
+        for (OrderItem order : cart) {
             tableModel.addRow(new Object[]{
                     order.item.name,
                     order.item.category,
@@ -202,25 +289,21 @@ public class CafeteriaSystem extends JFrame {
         }
     }
 
-    // 2. LOOP STATEMENT: Calculate subtotal
     private double calculateSubtotal() {
         double subtotal = 0.0;
-        for (OrderItem order : cart) { // Loop statement
+        for (OrderItem order : cart) {
             subtotal += order.getSubtotal();
         }
         return subtotal;
     }
 
-    // 3. CONDITIONAL STATEMENTS: Calculate discount & final total
     private double[] calculateFinals() {
         double subtotal = calculateSubtotal();
         double discount = 0.0;
 
-        // Conditional statement: PWD discount vs Bulk bill discount
-        if (chkPwd.isSelected()) {
-            discount = subtotal * 0.20; // 20% PWD discount
-        } else if (subtotal >= 500.0) {
-            discount = subtotal * 0.10; // 10% discount for orders ₱500 and above
+        // Simplified Conditional Statement: Only applies bulk discount
+        if (subtotal >= 500.0) {
+            discount = subtotal * 0.10;
         }
 
         double finalTotal = subtotal - discount;
@@ -234,7 +317,6 @@ public class CafeteriaSystem extends JFrame {
         lblTotal.setText(String.format("Total Bill: ₱%.2f", finals[2]));
     }
 
-    // 3. CONDITIONAL STATEMENTS: Payment validation & Change calculation
     private void processCheckout() {
         if (cart.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Order cart is empty!", "Error", JOptionPane.ERROR_MESSAGE);
@@ -246,16 +328,15 @@ public class CafeteriaSystem extends JFrame {
             double[] finals = calculateFinals();
             double finalTotal = finals[2];
 
-            // Conditional statement: Insufficient payment check
             if (payment < finalTotal) {
                 JOptionPane.showMessageDialog(this, "Insufficient payment.", "Payment Error", JOptionPane.ERROR_MESSAGE);
             } else {
                 double change = payment - finalTotal;
 
-                // Order Summary Receipt Dialog
                 StringBuilder receipt = new StringBuilder();
-                receipt.append("--- CAMPUS CAFETERIA RECEIPT ---\n\n");
-                for (OrderItem item : cart) { // Loop statement
+                receipt.append("--- CAMPUS CAFETERIA RECEIPT ---\n");
+                receipt.append("Type: ").append(orderType).append("\n\n");
+                for (OrderItem item : cart) {
                     receipt.append(String.format("%s x%d - ₱%.2f\n", item.item.name, item.quantity, item.getSubtotal()));
                 }
                 receipt.append("\n------------------------------\n");
@@ -267,7 +348,11 @@ public class CafeteriaSystem extends JFrame {
                 receipt.append("\nThank you for your order!");
 
                 JOptionPane.showMessageDialog(this, receipt.toString(), "Order Summary & Receipt", JOptionPane.INFORMATION_MESSAGE);
+                
+                // End transaction and return to welcome screen
                 resetOrder();
+                orderType = "";
+                cardLayout.show(mainContainer, "WELCOME");
             }
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this, "Please enter a valid numeric payment amount.", "Input Error", JOptionPane.WARNING_MESSAGE);
@@ -276,7 +361,6 @@ public class CafeteriaSystem extends JFrame {
 
     private void resetOrder() {
         cart.clear();
-        chkPwd.setSelected(false);
         txtPayment.setText("");
         refreshTable();
         updateTotals();
