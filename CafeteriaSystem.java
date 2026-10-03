@@ -49,6 +49,14 @@ public class CafeteriaSystem extends JFrame {
         
     try {
         UIManager.setLookAndFeel(new com.formdev.flatlaf.FlatLightLaf());
+        // Globally round all buttons and panels
+        UIManager.put("Button.arc", 25);
+        UIManager.put("Component.arc", 25);
+        UIManager.put("ScrollBar.thumbArc", 999);
+        UIManager.put("ScrollBar.thumbInsets", new Insets(2, 2, 2, 2));
+
+        // Make the scrollbars thicker and touch-friendly
+        UIManager.put("ScrollBar.width", 16);
     } catch (Exception ex) {
         System.err.println("Failed to initialize LaF");
     }
