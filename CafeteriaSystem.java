@@ -3,6 +3,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import com.formdev.flatlaf.FlatLightLaf;
 
 public class CafeteriaSystem extends JFrame {
 
@@ -46,7 +47,19 @@ public class CafeteriaSystem extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         
-        try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception e) {}
+    try {
+        UIManager.setLookAndFeel(new com.formdev.flatlaf.FlatLightLaf());
+        // Globally round all buttons and panels
+        UIManager.put("Button.arc", 25);
+        UIManager.put("Component.arc", 25);
+        UIManager.put("ScrollBar.thumbArc", 999);
+        UIManager.put("ScrollBar.thumbInsets", new Insets(2, 2, 2, 2));
+
+        // Make the scrollbars thicker and touch-friendly
+        UIManager.put("ScrollBar.width", 16);
+    } catch (Exception ex) {
+        System.err.println("Failed to initialize LaF");
+    }
 
         cardLayout = new CardLayout();
         mainContainer = new JPanel(cardLayout);
@@ -260,9 +273,6 @@ public class CafeteriaSystem extends JFrame {
         btn.setBackground(bg);
         btn.setForeground(fg);
         btn.setFocusPainted(false);
-        btn.setBorderPainted(false); 
-        btn.setContentAreaFilled(false); 
-        btn.setOpaque(true); 
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 
